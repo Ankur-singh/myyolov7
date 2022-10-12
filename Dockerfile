@@ -21,5 +21,5 @@ RUN python3.8 -m pip install scikit-build
 RUN git clone --recursive --depth=1 --recurse-submodules --shallow-submodules https://github.com/skvark/opencv-python.git
 RUN cd opencv-python && python3.8 -m pip wheel . --verbose && find . -name "opencv_python*.whl" | xargs python3.8 -m pip install
 RUN git clone -b jetson https://github.com/Ankur-singh/myyolov7
-RUN cd yolov7 && python3.8 -m pip install -r requirements.txt
+RUN cd myyolov7 && python3.8 -m pip install -r requirements.txt
 WORKDIR /myyolov7
