@@ -53,6 +53,56 @@ cd /yolov7
 
 </details>
 
+## Jetson Deployment
+
+For deploying yolov7 on NVIDIA Jetson, make sure your default docker runtime is set to `nvidia`. You can refer [this NVIDIA doc](https://docs.nvidia.com/dgx/nvidia-container-runtime-upgrade/index.html) or simply run the below commands
+
+```bash
+wget https://github.com/otamajakusi/dockerfile-yolov5-jetson/blob/feature/yolov7/setup.sh
+sudo chmod +x setup.sh
+sudo ./setup.sh
+```
+
+Next, we will have to build our docker image.
+
+```bash
+sudo docker build -t yolov7 .
+```
+
+**Note:** This may take a few hours to build the image. 
+
+Now we are all set to run our yolov7 model inside docker container. To jump inside the container, run the following commands:
+
+```bash
+> xhost +local:
+> docker run -it --rm \
+           --runtime nvidia \
+           --network host \
+           --device /dev/video0:/dev/video0:mrw \
+           -e DISPLAY=$DISPLAY \
+           -e LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1 \
+           -v /tmp/.X11-unix/:/tmp/.X11-unix \
+		   -v /tmp/argus_socket:/tmp/argus_socket \
+           yolov7 /bin/bash
+```
+
+To run the yolov7 model with custom weights, run the following commands:
+
+```bash
+> mkdir -p /path/to/weights
+> cp my-weights.pt /path/to/weights
+> xhost +local:
+> docker run -it --rm \
+           --runtime nvidia \
+           --network host \
+           --device /dev/video0:/dev/video0:mrw \
+           -e DISPLAY=$DISPLAY \
+           -e LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1 \
+           -v /tmp/.X11-unix/:/tmp/.X11-unix \
+		   -v /tmp/argus_socket:/tmp/argus_socket \
+           yolov7 python3.8 detect.py --source 0 --weights /weights/my-weights.pt
+```
+
 ## Testing
 
 [`yolov7.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7.pt) [`yolov7x.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7x.pt) [`yolov7-w6.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-w6.pt) [`yolov7-e6.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-e6.pt) [`yolov7-d6.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-d6.pt) [`yolov7-e6e.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-e6e.pt)

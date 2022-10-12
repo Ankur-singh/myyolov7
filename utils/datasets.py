@@ -281,12 +281,15 @@ class LoadStreams:  # multiple IP or RTSP cameras
         for i, s in enumerate(sources):
             # Start the thread to read frames from the video stream
             print(f'{i + 1}/{n}: {s}... ', end='')
-            url = eval(s) if s.isnumeric() else s
-            if 'youtube.com/' in str(url) or 'youtu.be/' in str(url):  # if source is YouTube video
+            if s.isnumeric():
+                url = eval(s)
+                cap = cv2.VideoCapture(self._gstreamer_pipeline(flip_method=0), cv2.CAP_GSTREAMER)
+            elif 'youtube.com/' in str(url) or 'youtu.be/' in str(url):  # if source is YouTube video
                 check_requirements(('pafy', 'youtube_dl'))
                 import pafy
+                url = s
                 url = pafy.new(url).getbest(preftype="mp4").url
-            cap = cv2.VideoCapture(url)
+                cap = cv2.VideoCapture(url)
             assert cap.isOpened(), f'Failed to open {s}'
             w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -342,6 +345,26 @@ class LoadStreams:  # multiple IP or RTSP cameras
 
     def __len__(self):
         return 0  # 1E12 frames = 32 streams at 30 FPS for 30 years
+
+    def _gstreamer_pipeline(
+        self,
+        capture_width=1280,
+        capture_height=720,
+        display_width=1280,
+        display_height=720,
+        framerate=60,
+        flip_method=0,
+    ):
+        return (
+            "nvarguscamerasrc ! "
+            "video/x-raw(memory:NVMM), "
+            f"width=(int){capture_width}, height=(int){capture_height}, "
+            f"format=(string)NV12, framerate=(fraction){framerate}/1 ! "
+            f"nvvidconv flip-method={flip_method} ! "
+            f"video/x-raw, width=(int){display_width}, height=(int){display_height}, format=(string)BGRx ! "
+            "videoconvert ! "
+            "video/x-raw, format=(string)BGR ! appsink"
+        )
 
 
 def img2label_paths(img_paths):
