@@ -129,11 +129,18 @@ def detect(save_img=False):
 
             # Print time (inference + NMS)
             #print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}s) NMS')
+            im0 = cv2.putText(img = im0, text = f'FPS : {1/(t3-t2):.2f}', org = (200, 200), fontFace = cv2.FONT_HERSHEY_DUPLEX, fontScale=2.0, color = (0, 0, 255), thickness=2)
 
             # Stream results
             if view_img:
                 cv2.imshow(str(p), im0)
-                cv2.waitKey(1)  # 1 millisecond
+                if dataset.mode == 'image':
+                    cv2.waitKey(1)  # 1 millisecond
+                else:
+                    keyCode = cv2.waitKey(10) & 0xFF
+                    if keyCode == 27 or keyCode == ord('q'):
+                        vid_cap.release()
+                        break
 
             # Save results (image with detections)
             if save_img:
