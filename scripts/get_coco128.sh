@@ -17,4 +17,4 @@ curl -L $url$f -o $f -# && unzip -q $f -d $d && rm $f &
 wait # finish background tasks
 
 echo 'Preparing coco128 ...'
-python prepare_coco128.py
+python3 prepare_coco128.py
