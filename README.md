@@ -44,7 +44,7 @@ wget https://github.com/Ankur-singh/myyolov7/releases/download/v0.1/yolov7-tiny.
 3. Run inference
 
 ```bash
-!python testMulti.py --weights yolov7-tiny.pt \  # any model format from the below table
+python testMulti.py --weights yolov7-tiny.pt \  # any model format from the below table
                 --data data/coco128.yaml \
                 --batch-size 1 \
                 --save-txt \
