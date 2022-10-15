@@ -134,7 +134,7 @@ def detect(save_img=False, half_precision=False):
 
             # Print time (inference + NMS)
             #print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}s) NMS')
-            im0 = cv2.putText(img = im0, text = f'FPS : {1/(t3-t2):.2f}', org = (200, 200), fontFace = cv2.FONT_HERSHEY_DUPLEX, fontScale=2.0, color = (0, 0, 255), thickness=2)
+            im0 = cv2.putText(img = im0, text = f'FPS : {1/(t3-t2):.2f}', org = (200, 200), fontFace = cv2.FONT_HERSHEY_DUPLEX, fontScale=1.0, color = (0, 0, 255), thickness=2)
 
             # Stream results
             if view_img:

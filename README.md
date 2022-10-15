@@ -1,282 +1,90 @@
-# Official YOLOv7
+### Original [README.md](https://github.com/Ankur-singh/myyolov7/blob/main/README.md)
 
-Implementation of paper - [YOLOv7: Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors](https://arxiv.org/abs/2207.02696)
+## Changes
 
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/yolov7-trainable-bag-of-freebies-sets-new/real-time-object-detection-on-coco)](https://paperswithcode.com/sota/real-time-object-detection-on-coco?p=yolov7-trainable-bag-of-freebies-sets-new)
-[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/akhaliq/yolov7)
-<a href="https://colab.research.google.com/gist/AlexeyAB/b769f5795e65fdab80086f6cb7940dae/yolov7detection.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
-[![arxiv.org](http://img.shields.io/badge/cs.CV-arXiv%3A2207.02696-B31B1B.svg)](https://arxiv.org/abs/2207.02696)
+1. Added `setup.sh` file to make 'nvidia' the default docker runtime. Refer [this commit](https://github.com/Ankur-singh/myyolov7/commit/dab4e45b2c419dc798ecfe27e9dc6b77e5780840)
+2. Added `Dockerfile` that is based on `nvidia/l4t-base:r32.7.1`. It builds torch, torchvision and OpenCV from source for make the most out of NVIDIA Jetson. Refer [this commit](https://github.com/Ankur-singh/myyolov7/commit/f34921dcf3ec0860be38397ce8cb064c71f7ed5d)
+3. Updated `LoadStreams` class (in `multi/moredatasets.py`) to use GSteamer for video capture. Refer [this commit](https://github.com/Ankur-singh/myyolov7/commit/5f1552c459ba3b5554cb3fea8b3e81d59d946822)
+4. Updated `detectMulti.py` to show FPS details, and to gracefully release the VideoCapture object when using `--source 0`. Refer [this commit](https://github.com/Ankur-singh/myyolov7/commit/5f1552c459ba3b5554cb3fea8b3e81d59d946822)
+5. Created a release with yolov7-tiny weights in three different formats:
+    - PyTorch - https://github.com/Ankur-singh/myyolov7/releases/download/v0.1/yolov7-tiny.pt
+    - ONNX - https://github.com/Ankur-singh/myyolov7/releases/download/v0.1/yolov7-tiny.onnx
+    - TensorRT - https://github.com/Ankur-singh/myyolov7/releases/download/v0.1/yolov7-tiny.engine
 
-<div align="center">
-    <a href="./">
-        <img src="./figure/performance.png" width="79%"/>
-    </a>
-</div>
+    **Note:** [Refer this colab notebook](https://colab.research.google.com/drive/1KN-59oxazH25m5UTAYvC_jQjq1JYESUS?usp=sharing) to learn how to export & infer yolov7 model in different formats
 
-## Web Demo
 
-- Integrated into [Huggingface Spaces 🤗](https://huggingface.co/spaces/akhaliq/yolov7) using Gradio. Try out the Web Demo [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/akhaliq/yolov7)
+## Benchmark : Model Scores
+Here is a table summarising all the scores for all three model formats: 
 
-## Performance 
+| Model format | Precision | Recall | mAP@.5 | mAP@.5:.95 |
+| --------- | --------- | --------- | --------- | --------- |
+| Pytorch  | 0.637 | 0.594  | 0.651  | 0.441   |
+| ONNX     | 0.74  | 0.54   | 0.635  | 0.437   | 
+| TensorRT | 0.743 | 0.539  | 0.634  | 0.436   |
 
-MS COCO
+as you can see, pytorch model is slightly better than ONNX and TensorRT.
 
-| Model | Test Size | AP<sup>test</sup> | AP<sub>50</sub><sup>test</sup> | AP<sub>75</sub><sup>test</sup> | batch 1 fps | batch 32 average time |
-| :-- | :-: | :-: | :-: | :-: | :-: | :-: |
-| [**YOLOv7**](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7.pt) | 640 | **51.4%** | **69.7%** | **55.9%** | 161 *fps* | 2.8 *ms* |
-| [**YOLOv7-X**](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7x.pt) | 640 | **53.1%** | **71.2%** | **57.8%** | 114 *fps* | 4.3 *ms* |
-|  |  |  |  |  |  |  |
-| [**YOLOv7-W6**](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-w6.pt) | 1280 | **54.9%** | **72.6%** | **60.1%** | 84 *fps* | 7.6 *ms* |
-| [**YOLOv7-E6**](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-e6.pt) | 1280 | **56.0%** | **73.5%** | **61.2%** | 56 *fps* | 12.3 *ms* |
-| [**YOLOv7-D6**](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-d6.pt) | 1280 | **56.6%** | **74.0%** | **61.8%** | 44 *fps* | 15.0 *ms* |
-| [**YOLOv7-E6E**](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-e6e.pt) | 1280 | **56.8%** | **74.4%** | **62.1%** | 36 *fps* | 18.7 *ms* |
+**Note:** All the models were tested on coco128 dataset. Also, testing was done on Google Colab (NOT on Jetson) 
 
-## Installation
-
-Docker environment (recommended)
-<details><summary> <b>Expand</b> </summary>
-
-``` shell
-# create the docker container, you can change the share memory size if you have more.
-nvidia-docker run --name yolov7 -it -v your_coco_path/:/coco/ -v your_code_path/:/yolov7 --shm-size=64g nvcr.io/nvidia/pytorch:21.08-py3
-
-# apt install required packages
-apt update
-apt install -y zip htop screen libgl1-mesa-glx
-
-# pip install required packages
-pip install seaborn thop
-
-# go to code folder
-cd /yolov7
-```
-
-</details>
-
-## Jetson Deployment
-
-For deploying yolov7 on NVIDIA Jetson, make sure your default docker runtime is set to `nvidia`. You can refer [this NVIDIA doc](https://docs.nvidia.com/dgx/nvidia-container-runtime-upgrade/index.html) or simply run the below commands
+To perform your own test, run the following:
+1. Download the dataset
 
 ```bash
-wget https://github.com/otamajakusi/dockerfile-yolov5-jetson/blob/feature/yolov7/setup.sh
-sudo chmod +x setup.sh
-sudo ./setup.sh
+cd scripts
+./get_coco128.sh
 ```
 
-Next, we will have to build our docker image.
+2. Download the model weights from [Release v0.1](https://github.com/Ankur-singh/myyolov7/releases/tag/v0.1). For example, we will download the Pytorch model weights
 
 ```bash
-sudo docker build -t yolov7 .
+wget https://github.com/Ankur-singh/myyolov7/releases/download/v0.1/yolov7-tiny.pt
 ```
 
-**Note:** This may take a few hours to build the image. 
-
-Now we are all set to run our yolov7 model inside docker container. To jump inside the container, run the following commands:
+3. Run inference
 
 ```bash
-> xhost +local:
-> docker run -it --rm \
-           --runtime nvidia \
-           --network host \
-           --device /dev/video0:/dev/video0:mrw \
-           -e DISPLAY=$DISPLAY \
-           -e LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1 \
-           -v /tmp/.X11-unix/:/tmp/.X11-unix \
-		   -v /tmp/argus_socket:/tmp/argus_socket \
-           yolov7 /bin/bash
+!python testMulti.py --weights yolov7-tiny.pt \  # any model format from the below table
+                --data data/coco128.yaml \
+                --batch-size 1 \
+                --save-txt \
+                --no-trace \
+                --name torch
 ```
 
-To run the yolov7 model with custom weights, run the following commands:
+You can run inference on many different model formats. Here is the complete list all model formats supported by `testMulti.py`:
 
-```bash
-> mkdir -p /path/to/weights
-> cp my-weights.pt /path/to/weights
-> xhost +local:
-> docker run -it --rm \
-           --runtime nvidia \
-           --network host \
-           --device /dev/video0:/dev/video0:mrw \
-           -e DISPLAY=$DISPLAY \
-           -e LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1 \
-           -v /tmp/.X11-unix/:/tmp/.X11-unix \
-		   -v /tmp/argus_socket:/tmp/argus_socket \
-           yolov7 python3.8 detect.py --source 0 --weights /weights/my-weights.pt
-```
+        #   PyTorch:              weights = *.pt
+        #   TorchScript:                    *.torchscript
+        #   ONNX Runtime:                   *.onnx
+        #   ONNX OpenCV DNN:                *.onnx with --dnn
+        #   OpenVINO:                       *.xml
+        #   CoreML:                         *.mlmodel
+        #   TensorRT:                       *.engine
+        #   TensorFlow SavedModel:          *_saved_model
+        #   TensorFlow GraphDef:            *.pb
+        #   TensorFlow Lite:                *.tflite
+        #   TensorFlow Edge TPU:            *_edgetpu.tflite
 
-## Testing
+**Note**: You will have to seperately (and manually) install packages for the model format that you plan to perform inference on.
 
-[`yolov7.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7.pt) [`yolov7x.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7x.pt) [`yolov7-w6.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-w6.pt) [`yolov7-e6.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-e6.pt) [`yolov7-d6.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-d6.pt) [`yolov7-e6e.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-e6e.pt)
+## Inference on Jetson
 
-``` shell
-python test.py --data data/coco.yaml --img 640 --batch 32 --conf 0.001 --iou 0.65 --device 0 --weights yolov7.pt --name yolov7_640_val
-```
+For deploying yolov7 model on Jetson, refer [this wiki](https://github.com/Ankur-singh/myyolov7/wiki/Jetson-Deployment)
 
-You will get the results:
+Here is a sample image taken during inference
 
-```
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.51206
- Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.69730
- Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.55521
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.35247
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.55937
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.66693
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.38453
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.63765
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.68772
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.53766
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.73549
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.83868
-```
+![img](assets/fps_image.jpeg)
 
-To measure accuracy, download [COCO-annotations for Pycocotools](http://images.cocodataset.org/annotations/annotations_trainval2017.zip).
+**Note:** I was ONLY able to run PyTorch model in Jetson.
 
-## Training
+## Challenges
 
-Data preparation
+- Jetson has only 28 GBs memory. Its very little memory to work with, most docker builds are failing because there is not enough memory. It would really help if there is more space to work with.
+- Wheel file for `onnxruntime-gpu` is not available. So, I will have to build it from the source. I plan to follow the [this ONNX doc](https://onnxruntime.ai/docs/build/eps.html#nvidia-jetson-tx1tx2nanoxavier). I was not able to build it yet because there is no space in Jetson.
 
-``` shell
-bash scripts/get_coco.sh
-```
+## Future Work
 
-* Download MS COCO dataset images ([train](http://images.cocodataset.org/zips/train2017.zip), [val](http://images.cocodataset.org/zips/val2017.zip), [test](http://images.cocodataset.org/zips/test2017.zip)) and [labels](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/coco2017labels-segments.zip). If you have previously used a different version of YOLO, we strongly recommend that you delete `train2017.cache` and `val2017.cache` files, and redownload [labels](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/coco2017labels-segments.zip) 
-
-Single GPU training
-
-``` shell
-# train p5 models
-python train.py --workers 8 --device 0 --batch-size 32 --data data/coco.yaml --img 640 640 --cfg cfg/training/yolov7.yaml --weights '' --name yolov7 --hyp data/hyp.scratch.p5.yaml
-
-# train p6 models
-python train_aux.py --workers 8 --device 0 --batch-size 16 --data data/coco.yaml --img 1280 1280 --cfg cfg/training/yolov7-w6.yaml --weights '' --name yolov7-w6 --hyp data/hyp.scratch.p6.yaml
-```
-
-Multiple GPU training
-
-``` shell
-# train p5 models
-python -m torch.distributed.launch --nproc_per_node 4 --master_port 9527 train.py --workers 8 --device 0,1,2,3 --sync-bn --batch-size 128 --data data/coco.yaml --img 640 640 --cfg cfg/training/yolov7.yaml --weights '' --name yolov7 --hyp data/hyp.scratch.p5.yaml
-
-# train p6 models
-python -m torch.distributed.launch --nproc_per_node 8 --master_port 9527 train_aux.py --workers 8 --device 0,1,2,3,4,5,6,7 --sync-bn --batch-size 128 --data data/coco.yaml --img 1280 1280 --cfg cfg/training/yolov7-w6.yaml --weights '' --name yolov7-w6 --hyp data/hyp.scratch.p6.yaml
-```
-
-## Transfer learning
-
-[`yolov7_training.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7_training.pt) [`yolov7x_training.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7x_training.pt) [`yolov7-w6_training.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-w6_training.pt) [`yolov7-e6_training.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-e6_training.pt) [`yolov7-d6_training.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-d6_training.pt) [`yolov7-e6e_training.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-e6e_training.pt)
-
-Single GPU finetuning for custom dataset
-
-``` shell
-# finetune p5 models
-python train.py --workers 8 --device 0 --batch-size 32 --data data/custom.yaml --img 640 640 --cfg cfg/training/yolov7-custom.yaml --weights 'yolov7_training.pt' --name yolov7-custom --hyp data/hyp.scratch.custom.yaml
-
-# finetune p6 models
-python train_aux.py --workers 8 --device 0 --batch-size 16 --data data/custom.yaml --img 1280 1280 --cfg cfg/training/yolov7-w6-custom.yaml --weights 'yolov7-w6_training.pt' --name yolov7-w6-custom --hyp data/hyp.scratch.custom.yaml
-```
-
-## Re-parameterization
-
-See [reparameterization.ipynb](tools/reparameterization.ipynb)
-
-## Pose estimation
-
-[`yolov7-w6-pose.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-w6-pose.pt)
-
-See [keypoint.ipynb](https://github.com/WongKinYiu/yolov7/blob/main/tools/keypoint.ipynb).
-
-## Inference
-
-On video:
-``` shell
-python detect.py --weights yolov7.pt --conf 0.25 --img-size 640 --source yourvideo.mp4
-```
-
-On image:
-``` shell
-python detect.py --weights yolov7.pt --conf 0.25 --img-size 640 --source inference/images/horses.jpg
-```
-
-<div align="center">
-    <a href="./">
-        <img src="./figure/horses_prediction.jpg" width="59%"/>
-    </a>
-</div>
-
-
-## Export
-
-
-**Pytorch to ONNX with NMS (and inference)** <a href="https://colab.research.google.com/github/WongKinYiu/yolov7/blob/main/tools/YOLOv7onnx.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
-```shell
-python export.py --weights yolov7-tiny.pt --grid --end2end --simplify \
-        --topk-all 100 --iou-thres 0.65 --conf-thres 0.35 --img-size 640 640 --max-wh 640
-```
-
-**Pytorch to TensorRT with NMS (and inference)** <a href="https://colab.research.google.com/github/WongKinYiu/yolov7/blob/main/tools/YOLOv7trt.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
-
-```shell
-wget https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-tiny.pt
-python export.py --weights ./yolov7-tiny.pt --grid --end2end --simplify --topk-all 100 --iou-thres 0.65 --conf-thres 0.35 --img-size 640 640
-git clone https://github.com/Linaom1214/tensorrt-python.git
-python ./tensorrt-python/export.py -o yolov7-tiny.onnx -e yolov7-tiny-nms.trt -p fp16
-```
-
-**Pytorch to TensorRT another way** <a href="https://colab.research.google.com/gist/AlexeyAB/fcb47ae544cf284eb24d8ad8e880d45c/yolov7trtlinaom.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a> <details><summary> <b>Expand</b> </summary>
-
-
-```shell
-wget https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-tiny.pt
-python export.py --weights yolov7-tiny.pt --grid --include-nms
-git clone https://github.com/Linaom1214/tensorrt-python.git
-python ./tensorrt-python/export.py -o yolov7-tiny.onnx -e yolov7-tiny-nms.trt -p fp16
-
-# Or use trtexec to convert ONNX to TensorRT engine
-/usr/src/tensorrt/bin/trtexec --onnx=yolov7-tiny.onnx --saveEngine=yolov7-tiny-nms.trt --fp16
-```
-
-</details>
-
-Tested with: Python 3.7.13, Pytorch 1.12.0+cu113
-
-
-## Citation
-
-```
-@article{wang2022yolov7,
-  title={{YOLOv7}: Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors},
-  author={Wang, Chien-Yao and Bochkovskiy, Alexey and Liao, Hong-Yuan Mark},
-  journal={arXiv preprint arXiv:2207.02696},
-  year={2022}
-}
-```
-
-## Teaser
-
-Yolov7-mask & YOLOv7-pose
-
-<div align="center">
-    <a href="./">
-        <img src="./figure/mask.png" width="56%"/>
-    </a>
-    <a href="./">
-        <img src="./figure/pose.png" width="42%"/>
-    </a>
-</div>
-
-
-## Acknowledgements
-
-<details><summary> <b>Expand</b> </summary>
-
-* [https://github.com/AlexeyAB/darknet](https://github.com/AlexeyAB/darknet)
-* [https://github.com/WongKinYiu/yolor](https://github.com/WongKinYiu/yolor)
-* [https://github.com/WongKinYiu/PyTorch_YOLOv4](https://github.com/WongKinYiu/PyTorch_YOLOv4)
-* [https://github.com/WongKinYiu/ScaledYOLOv4](https://github.com/WongKinYiu/ScaledYOLOv4)
-* [https://github.com/Megvii-BaseDetection/YOLOX](https://github.com/Megvii-BaseDetection/YOLOX)
-* [https://github.com/ultralytics/yolov3](https://github.com/ultralytics/yolov3)
-* [https://github.com/ultralytics/yolov5](https://github.com/ultralytics/yolov5)
-* [https://github.com/DingXiaoH/RepVGG](https://github.com/DingXiaoH/RepVGG)
-* [https://github.com/JUGGHM/OREPA_CVPR2022](https://github.com/JUGGHM/OREPA_CVPR2022)
-* [https://github.com/TexasInstruments/edgeai-yolov5/tree/yolo-pose](https://github.com/TexasInstruments/edgeai-yolov5/tree/yolo-pose)
-
-</details>
+- Add support for ONNX model.
+- Add support for TensorRT model.
+- Try out [new tutorial](https://github.com/ultralytics/yolov5/issues/9627) from Ultralytics team on how to deploy yolov5 model on Jetson Nano 
